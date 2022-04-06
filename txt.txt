@@ -107,3 +107,19 @@ Container(
                     border: InputBorder.none),
               ),
             ),
+-------------------------------------------------------------------------------------------------
+Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 50.0,
+                backgroundImage: AssetImage('./images/Life.jpeg'),
+              ),
+              Text(
+                'Game Monk',
+                style: TextStyle(
+                    fontFamily: 'Pacifico',
+                    fontSize: 40.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
