@@ -1,0 +1,43 @@
+Column(
+        children: [
+          Expanded(
+            child: FutureBuilder(
+              future: getPostApi(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return Text('Loading');
+                } else {
+                  return ListView.builder(
+                      itemCount: postList.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          margin: EdgeInsets.all(10),
+                          color: Color.fromARGB(255, 239, 238, 243),
+                          shadowColor: Color.fromARGB(255, 235, 235, 238),
+                          elevation: 10,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ListTile(
+                                leading: Image.network(
+                                    postList[index].logoURL.toString(),
+                                    errorBuilder: (BuildContext context,
+                                        Object exception,
+                                        StackTrace? stackTrace) {
+                                  return const Text('ð¢');
+                                }),
+                                title: Text(
+                                  postList[index].clientName.toString(),
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      });
+                }
+              },
+            ),
+          )
+        ],
+      ),
