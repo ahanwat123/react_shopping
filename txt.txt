@@ -66,3 +66,25 @@ Column(
 search bar link
 https://blog.smartnsoft.com/an-automatic-search-bar-in-flutter-flappy-search-bar-a470bc67fa1f
 --------------------------------------------------------------------------------------
+Container(
+          height: 38,
+          child: TextField(
+            onChanged: (value) => onSearch(value),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.grey[850],
+              contentPadding: EdgeInsets.all(0),
+              prefixIcon: Icon(Icons.search, color: Colors.grey.shade500,),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(50),
+                borderSide: BorderSide.none
+              ),
+              hintStyle: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500
+              ),
+              hintText: "Search users"
+            ),
+          ),
+        ),
+      ),
