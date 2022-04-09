@@ -31,3 +31,11 @@ Future<void> _handleSubmitted() async {
         globalShowInSnackBar(scaffoldMessengerKey, "Something went wrong!!");
     }
   }
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+String encrypt(String password) {
+  // 'Used to Encrypt a String
+  String encryptedPassword = "";
+  Uint8List encode = utf8.encode(password) as Uint8List;
+  encryptedPassword = base64Encode(encode);
+  return encryptedPassword;
+}
