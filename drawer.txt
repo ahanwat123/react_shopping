@@ -77,3 +77,15 @@ Future<void> _handleSubmitted() async {
         globalShowInSnackBar(scaffoldMessengerKey, "Something went wrong!!");
     }
   }
+----------------------------------------------------------------------------------------------
+Future<TokenModel?> getToken(String? userName, String? password) async {
+  TokenModel? token;
+  await postRegistrationDetails(userName, password).then((TokenModel value) async => {
+        token = value,
+        await DatabaseHandler.db.insertToken(value),
+        UserDetail.isTokenGenerated = true,
+        setIsLogined(true),
+        setUserCred(userName!, password!)
+      });
+  return token;
+}
