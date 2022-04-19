@@ -44,3 +44,36 @@ Future<TokenModel> postRegistrationDetails(
     throw "ErrorHasOccurred";
   }
 }
+------------------------------------------------------------------------------------------------
+Future<void> _handleSubmitted() async {
+    try {
+      setState(() {
+        isLoading = true;
+      });
+      UserDetail.token =
+          await getToken(nameController.text, encrypt(passwordController.text));
+      // UserDetail.token=await getToken("utkarshagrawal90@gmail.com", "YWFhYWFhYWE=");
+      setState(() {
+        isLoading = false;
+      });
+      Navigator.of(context).pushReplacement(new CupertinoPageRoute<void>(
+          builder: (context) => CompanyPage(
+                isNotBottomSheet: true,
+              )));
+    } catch (E1) {
+      FocusScope.of(context).unfocus();
+      setState(() {
+        isLoading = false;
+      });
+      if (E1.toString() == "NoInternet")
+        globalShowInSnackBar(scaffoldMessengerKey, "No Internet Connection!!");
+      else if (E1.toString() == "500")
+        globalShowInSnackBar(scaffoldMessengerKey,
+            "Something went wrong on our side, we are working on it");
+      else if (E1.toString() == "NoData")
+        globalShowInSnackBar(
+            scaffoldMessengerKey, "Please Enter Correct Username and Password");
+      else if (E1.toString() == "ErrorHasOccurred")
+        globalShowInSnackBar(scaffoldMessengerKey, "Something went wrong!!");
+    }
+  }
