@@ -89,3 +89,17 @@ Future<TokenModel?> getToken(String? userName, String? password) async {
       });
   return token;
 }
+--------------------------------------------------------------------------------------------
+void globalShowInSnackBar(GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey, String value) {
+  scaffoldMessengerKey.currentState!.hideCurrentSnackBar();
+  if (value == "ErrorHasOccurred")
+    value = "Oops!! Error 404.";
+  else if (value == "NoData")
+    value = "No data received.";
+  else if (value == "500")
+    value = "Oops!! Error 500, It's not you, It's us.";
+  else if (value == "NoInternet") value = "No Internet Connections present!!";
+  scaffoldMessengerKey.currentState!.showSnackBar(SnackBar(
+    content: Text(value),
+  ));
+}
