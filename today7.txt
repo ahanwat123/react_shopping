@@ -1,264 +1,418 @@
-
+// ignore_for_file: use_key_in_widget_constructors, unnecessary_new, prefer_const_constructors, prefer_const_literals_to_create_immutables, deprecated_member_use, avoid_unnecessary_containers, unused_import, must_be_immutable, must_call_super, unnecessary_this
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_drawer_example/privacy_policy.dart';
-import 'package:flutter_drawer_example/send_feedback.dart';
-import 'package:flutter_drawer_example/settings.dart';
+import 'package:expansion_tile_card/expansion_tile_card.dart';
+import '../controllers/company_list_controller.dart';
+import '../models/CompanyListModel.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+import '../models/first_login_model.dart';
+import '../models/ApiHeaderModel.dart';
+import 'package:dio/dio.dart';
 
-import 'contacts.dart';
-import 'dashboard.dart';
-import 'events.dart';
-import 'my_drawer_header.dart';
-import 'notes.dart';
-import 'notifications.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  var currentPage = DrawerSections.dashboard;
+class CompanyList extends StatefulWidget {
+  const CompanyList({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    var container;
-    if (currentPage == DrawerSections.dashboard) {
-      container = DashboardPage();
-    } else if (currentPage == DrawerSections.contacts) {
-      container = ContactsPage();
-    } else if (currentPage == DrawerSections.events) {
-      container = EventsPage();
-    } else if (currentPage == DrawerSections.notes) {
-      container = NotesPage();
-    } else if (currentPage == DrawerSections.settings) {
-      container = SettingsPage();
-    } else if (currentPage == DrawerSections.notifications) {
-      container = NotificationsPage();
-    } else if (currentPage == DrawerSections.privacy_policy) {
-      container = PrivacyPolicyPage();
-    } else if (currentPage == DrawerSections.send_feedback) {
-      container = SendFeedbackPage();
+  State<CompanyList> createState() => _CompanyListState();
+}
+
+class _CompanyListState extends State<CompanyList> {
+  final GlobalKey<ExpansionTileCardState> cardA = new GlobalKey();
+  //Future<List<CompanyModel>>? postList;
+  List<CompanyModel> postList = <CompanyModel>[];
+  // Future<List<CompanyModel>> getPostApi() async {
+  //   final response = await http.get(Uri.parse(
+  //       'https://api.codeplayers.in/api/IFXCompanyList?UID=5021EE4A-79C1-45C4-89E2-B1358EC56AD9'));
+  //   if (response.statusCode == 200) {
+  //     List jsonResponse = json.decode(response.body);
+  //     return jsonResponse.map((e) => CompanyModel.fromJson(e)).toList();
+  //   } else {
+  //     throw Exception('not found');
+  //   }
+  // }
+  Future<List<CompanyModel>> getPostApi() async {
+    var dio = Dio();
+    Map<String, String> header = {
+      "accept":
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+      "method": "GET",
+    };
+    final resposne = await dio.get(
+        'https://0bfa-103-234-94-21.in.ngrok.io/api/GetCompanyListAPI',
+        options: Options(headers: header));
+    if (resposne.statusCode == 200) {
+      List<dynamic> values = <dynamic>[];
+      values = json.decode(resposne.data);
+      if (values.isNotEmpty) {
+        for (int i = 0; i < values.length; i++) {
+          if (values[i] != null) {
+            Map<String, dynamic> map = values[i];
+            postList.add(CompanyModel.fromJson(map));
+          }
+        }
+      }
+      return postList;
+    } else {
+      throw Exception('failed');
     }
+  }
+  // void searchCompanyName(String query) {
+  //   final suggestions = postList.where((element) {
+  //     final companytitle = element.clientName!.toLowerCase();
+  //     final input = query.toLowerCase();
+
+  //     return companytitle.contains(input);
+  //   }).toList();
+  //   postList = suggestions;
+  // }
+  @override
+  void initState() {
+    getPostApi();
+  }
+
+  bool isSearching = false;
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[700],
-        title: Text("Rapid Tech"),
-      ),
-      body: container,
-      drawer: Drawer(
-        child: SingleChildScrollView(
-          child: Container(
-            child: Column(
-              children: [
-                MyHeaderDrawer(),
-                MyDrawerList(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget MyDrawerList() {
-    return Container(
-      padding: EdgeInsets.only(
-        top: 15,
-      ),
-      child: Column(
-        // shows the list of menu drawer
-        children: [
-          menuItem(1, "Dashboard", Icons.dashboard_outlined,
-              currentPage == DrawerSections.dashboard ? true : false),
-          menuItem(2, "Contacts", Icons.people_alt_outlined,
-              currentPage == DrawerSections.contacts ? true : false),
-          menuItem(3, "Events", Icons.event,
-              currentPage == DrawerSections.events ? true : false),
-          menuItem(4, "Notes", Icons.notes,
-              currentPage == DrawerSections.notes ? true : false),
-          Divider(),
-          menuItem(5, "Settings", Icons.settings_outlined,
-              currentPage == DrawerSections.settings ? true : false),
-          menuItem(6, "Notifications", Icons.notifications_outlined,
-              currentPage == DrawerSections.notifications ? true : false),
-          Divider(),
-          menuItem(7, "Privacy policy", Icons.privacy_tip_outlined,
-              currentPage == DrawerSections.privacy_policy ? true : false),
-          menuItem(8, "Send feedback", Icons.feedback_outlined,
-              currentPage == DrawerSections.send_feedback ? true : false),
+        backgroundColor: Color(0xFF6CA8F1),
+        title: !isSearching
+            ? const Text('Companies')
+            : TextField(
+                onChanged: (value) {},
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    icon: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                    ),
+                    hintText: "Search Leager here",
+                    hintStyle: TextStyle(color: Colors.white)),
+              ),
+        actions: <Widget>[
+          isSearching
+              ? IconButton(
+                  icon: const Icon(Icons.cancel),
+                  onPressed: () {
+                    setState(() {
+                      this.isSearching = false;
+                    });
+                  },
+                )
+              : IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    setState(() {
+                      this.isSearching = true;
+                    });
+                  },
+                ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.refresh))
         ],
       ),
-    );
-  }
-
-  Widget menuItem(int id, String title, IconData icon, bool selected) {
-    return Material(
-      color: selected ? Colors.grey[300] : Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.pop(context);
-          setState(() {
-            if (id == 1) {
-              currentPage = DrawerSections.dashboard;
-            } else if (id == 2) {
-              currentPage = DrawerSections.contacts;
-            } else if (id == 3) {
-              currentPage = DrawerSections.events;
-            } else if (id == 4) {
-              currentPage = DrawerSections.notes;
-            } else if (id == 5) {
-              currentPage = DrawerSections.settings;
-            } else if (id == 6) {
-              currentPage = DrawerSections.notifications;
-            } else if (id == 7) {
-              currentPage = DrawerSections.privacy_policy;
-            } else if (id == 8) {
-              currentPage = DrawerSections.send_feedback;
-            }
-          });
-        },
-        child: Padding(
-          padding: EdgeInsets.all(15.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: Colors.black,
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: Column(children: [
+        Expanded(
+            child: ListView.builder(
+                itemCount: postList.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Padding(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
+                    child: Card(
+                      color: Colors.white,
+                      child: ListTile(
+                        leading: Container(
+                          child: Image.network(
+                            postList[index].databaseName.toString(),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        title: Text(postList[index].companyName.toString()),
+                      ),
+                    ),
+                  );
+                }))
+      ]),
     );
   }
 }
-
-enum DrawerSections {
-  dashboard,
-  contacts,
-  events,
-  notes,
-  settings,
-  notifications,
-  privacy_policy,
-  send_feedback,
-}
-----------------------------------------------------------------------------------
-import 'package:flutter/widgets.dart';
-
-class MyFlutterApp {
-  MyFlutterApp._();
-
-  static const _kFontFamNavDrawer = 'nav_drawer';
-  static const _kFontFamSlide = 'slide_icon';
-  static const _kFontPkg = null;
-
-  static const IconData navigation_drawer = IconData(0xe800, fontFamily: _kFontFamNavDrawer, fontPackage: _kFontPkg);
-  static const IconData slide_icon = IconData(0xe801, fontFamily: _kFontFamSlide, fontPackage: _kFontPkg);
-}
-----------------------------------------------------------------------------------------
+-----------------------------------------------------------
+// ignore_for_file: avoid_print, unnecessary_const, unnecessary_string_escapes, prefer_const_declarations, unused_element, dead_code, use_key_in_widget_constructors, import_of_legacy_library_into_null_safe, prefer_const_constructors
 import 'package:flutter/material.dart';
-import 'package:flutterfinancialapp/constants/color_constant.dart';
+import 'package:infinityx/secondloginscreen.dart';
+import 'package:infinityx/views/company_list_view.dart';
+import './models/splash.dart';
+import 'package:provider/provider.dart';
+import 'package:get/get.dart';
+import './views/dashboard_view/dashboard.dart';
+import './views/log_in_page/login_page_view.dart';
+import 'models/splash.dart';
+//import './views/second_log_in_page/second_log_in_view.dart';
+import 'views/dashboard_view/bottomnavigation.dart';
+import './views/dashboard_view/dashboard.dart';
+import './views/dashboard_view/drawer.dart';
+import 'CompanyApiService.dart';
+import './views/dashboard_view/pages/products.dart';
+import './views/second_log_in.dart';
 
-class CardModel {
-  String name;
-  String type;
-  String balance;
-  String valid;
-  String moreIcon;
-  String cardBackground;
-  Color bgColor;
-  Color firstColor;
-  Color secondColor;
-
-  CardModel(this.name, this.type, this.balance, this.valid, this.moreIcon,
-      this.cardBackground, this.bgColor, this.firstColor, this.secondColor);
+void main() {
+  runApp(Infinityx());
 }
 
-List<CardModel> cards = cardData
-    .map((item) => CardModel(
-        item['name'],
-        item['type'],
-        item['balance'],
-        item['valid'],
-        item['moreIcon'],
-        item['cardBackground'],
-        item['bgColor'],
-        item['firstColor'],
-        item['secondColor']))
-    .toList();
-
-var cardData = [
-  {
-    "name": "Prambors",
-    "type": "assets/images/mastercard_logo.png",
-    "balance": "6.352.251",
-    "valid": "06/24",
-    "moreIcon": 'assets/icons/more_icon_grey.svg',
-    "cardBackground":'assets/icons/mastercard_bg.svg',
-    "bgColor": kMasterCardColor,
-    "firstColor": kGreyColor,
-    "secondColor": kBlackColor
-  },
-  {
-    "name": "Prambors",
-    "type": "assets/images/jenius_logo.png",
-    "balance": "20.528.337",
-    "valid": "02/23",
-    "moreIcon": 'assets/icons/more_icon_white.svg',
-    "cardBackground":'assets/svg/jenius_bg.svg',
-    "bgColor": kJeniusCardColor,
-    "firstColor": kWhiteColor,
-    "secondColor": kWhiteColor
-  },
-
-  {
-    "name": "Prambors",
-    "type": "assets/images/mastercard_logo.png",
-    "balance": "6.352.251",
-    "valid": "06/24",
-    "moreIcon": 'assets/icons/more_icon_grey.svg',
-    "cardBackground":'assets/svg/mastercard_bg.svg',
-    "bgColor": kMasterCardColor,
-    "firstColor": kGreyColor,
-    "secondColor": kBlackColor
-  },
-  {
-    "name": "Prambors",
-    "type": "assets/images/jenius_logo.png",
-    "balance": "20.528.337",
-    "valid": "02/23",
-    "moreIcon": 'assets/icons/more_icon_white.svg',
-    "cardBackground":'assets/svg/jenius_bg.svg',
-    "bgColor": kJeniusCardColor,
-    "firstColor": kWhiteColor,
-    "secondColor": kWhiteColor
+class Infinityx extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
+      theme: ThemeData(primarySwatch: Colors.indigo),
+      home: CompanyList(),
+    );
   }
-];
+}
+
+// class LoginPage extends StatefulWidget {
+//   const LoginPage({Key? key}) : super(key: key);
+
+//   @override
+//   _LoginPageState createState() => _LoginPageState();
+// }
+
+// class _LoginPageState extends State<LoginPage> {
+//   final MainController controller = Get.put(MainController());
+
+//   final emailText = TextEditingController();
+//   final passwordText = TextEditingController();
+
+//   Future<LoginApiResponse?> createUser(
+//       String name, String jobTitle, String type) async {
+//     var url = Uri.parse('https://api.codeplayers.in/token');
+//     final response = await http.post(url,
+//         body: {"Username": name, "Password": jobTitle, "grant_type": type});
+
+//     if (response.statusCode == 201) {
+//       final String responseString = response.body;
+
+//       return loginApiResponseFromJson(responseString);
+//     } else {
+//       return null;
+//     }
+//   }
+
+//   LoginApiResponse? user;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//           title: const Text('Login'),
+//           backgroundColor: const Color.fromARGB(255, 129, 101, 173)),
+//       body: Column(
+//         children: [
+//           Image.asset('assets/images/infinityx.png', width: 80, height: 80),
+//           Container(
+//               padding: const EdgeInsets.all(20),
+//               child: const TextField(
+//                 decoration: InputDecoration(
+//                   focusedBorder: OutlineInputBorder(
+//                     borderSide: BorderSide(
+//                         color: Color.fromARGB(255, 129, 101, 173), width: 2.0),
+//                   ),
+//                   hintText: "Username",
+//                   labelText: "Email",
+//                 ),
+//               )),
+//           Container(
+//               padding: const EdgeInsets.all(20),
+//               child: const TextField(
+//                 decoration: InputDecoration(
+//                   focusedBorder: OutlineInputBorder(
+//                     borderSide: BorderSide(
+//                         color: Color.fromARGB(255, 129, 101, 173), width: 2.0),
+//                   ),
+//                   hintText: "Password",
+//                   labelText: "",
+//                 ),
+//               )),
+//           TextButton(
+//             style: TextButton.styleFrom(
+//               primary: Colors.white,
+//               backgroundColor: const Color.fromARGB(255, 129, 101, 173),
+//               side: const BorderSide(
+//                   color: Color.fromARGB(255, 13, 71, 180), width: 1),
+//               elevation: 20,
+//               minimumSize: const Size(100, 50),
+//               shadowColor: const Color.fromARGB(255, 129, 101, 173),
+//               shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(30)),
+//             ),
+//             onPressed: () {
+//               final String name = emailText.text;
+//               final String password = passwordText.text;
+//               final String grant = "password";
+//               controller.fatchProductData(grant, name, password);
+//             },
+//             child: const Text(
+//               'Submit',
+//             ),
+//           )
+//         ],
+//       ),
+//     );
+//   }
+// }
+-------------------------------------------------------------
+// ignore_for_file: unnecessary_this, file_names, recursive_getters, empty_constructor_bodies
+
+// class CompanyModel {
+//   String? clientName;
+//   String? guid;
+//   String? companyGUID;
+//   String? logoURL;
+//   CompanyModel(
+//       {String? clientName,
+//       String? guid,
+//       String? companyGUID,
+//       String? logoURL}) {
+//     clientName = clientName;
+//     guid = guid;
+//     companyGUID = companyGUID;
+//     logoURL = logoURL;
+//   }
+
+//   CompanyModel.fromJson(dynamic json) {
+//     clientName = json['clientName'];
+//     guid = json['guid'];
+//     companyGUID = json['companyGUID'];
+//     logoURL = json['logoURL'];
+//   }
+
+//   Map<String, dynamic> toJson() {
+//     final map = <String, dynamic>{};
+//     map['clientName'] = this.clientName;
+//     map['guid'] = this.guid;
+//     map['companyGUID'] = this.companyGUID;
+//     map['logoURL'] = this.logoURL;
+//     return map;
+//   }
+// }
+// class CompanyListModel {
+//   CompanyListModel({
+//     this.clientName,
+//     this.logoUrl,
+//     this.dataExchangeVia,
+//     this.dataExchangeUrl,
+//     this.clientType,
+//     this.guid,
+//     this.companyGuid,
+//     this.outletConfiguration,
+//   });
+
+//   final String? clientName;
+//   final String? logoUrl;
+//   final String? dataExchangeVia;
+//   final String? dataExchangeUrl;
+//   final String? clientType;
+//   final String? guid;
+//   final String? companyGuid;
+//   final dynamic outletConfiguration;
+
+//   factory CompanyListModel.fromJson(Map<dynamic, dynamic> json) =>
+//       CompanyListModel(
+//         clientName: json["clientName"],
+//         logoUrl: json["logoURL"],
+//         dataExchangeVia: json["dataExchangeVia"],
+//         dataExchangeUrl: json["dataExchangeURL"],
+//         clientType: json["clientType"],
+//         guid: json["guid"],
+//         companyGuid: json["companyGUID"],
+//         outletConfiguration: json["outletConfiguration"],
+//       );
+// }
+
+// class CompanyModel {
+//   String? clientName;
+//   String? guid;
+//   String? companyGUID;
+//   String? logoURL;
+//   CompanyModel(
+//       {String? clientName,
+//       String? guid,
+//       String? companyGUID,
+//       String? logoURL}) {
+//     clientName = clientName;
+//     guid = guid;
+//     companyGUID = companyGUID;
+//     logoURL = logoURL;
+//   }
+
+//   CompanyModel.fromJson(dynamic json) {
+//     clientName = json['clientName'];
+//     guid = json['guid'];
+//     companyGUID = json['companyGUID'];
+//     logoURL = json['logoURL'];
+//   }
+
+//   Map<String, dynamic> toJson() {
+//     final map = <String, dynamic>{};
+//     map['clientName'] = this.clientName;
+//     map['guid'] = this.guid;
+//     map['companyGUID'] = this.companyGUID;
+//     map['logoURL'] = this.logoURL;
+//     return map;
+//   }
+// }
+class CompanyModel {
+  String? databaseType;
+  String? companyName;
+  String? companyCode;
+  String? period;
+  String? serverName;
+  String? databaseName;
+  String? loginName;
+  String? loginPassword;
+  bool? isDefault;
+  bool? isActive;
+
+  CompanyModel(
+      {this.databaseType,
+      this.companyName,
+      this.companyCode,
+      this.period,
+      this.serverName,
+      this.databaseName,
+      this.loginName,
+      this.loginPassword,
+      this.isDefault,
+      this.isActive});
+
+  CompanyModel.fromJson(Map<String, dynamic> json) {
+    databaseType = json['databaseType'];
+    companyName = json['companyName'];
+    companyCode = json['companyCode'];
+    period = json['period'];
+    serverName = json['serverName'];
+    databaseName = json['databaseName'];
+    loginName = json['loginName'];
+    loginPassword = json['loginPassword'];
+    isDefault = json['isDefault'];
+    isActive = json['isActive'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['databaseType'] = this.databaseType;
+    data['companyName'] = this.companyName;
+    data['companyCode'] = this.companyCode;
+    data['period'] = this.period;
+    data['serverName'] = this.serverName;
+    data['databaseName'] = this.databaseName;
+    data['loginName'] = this.loginName;
+    data['loginPassword'] = this.loginPassword;
+    data['isDefault'] = this.isDefault;
+    data['isActive'] = this.isActive;
+    return data;
+  }
+}
